@@ -1,0 +1,168 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "ApceraCEVPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Product",
+            "Value": "apcera-setup"
+          },
+          {
+            "Key": "Name",
+            "Value": "ApceraCEVPC"
+          }
+        ]
+      }
+    },
+    "ApceraCESN": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": "us-west-2b",
+        "CidrBlock": "10.0.50.0/24",
+        "Tags": [
+          {
+            "Key": "Product",
+            "Value": "apcera-setup"
+          },
+          {
+            "Key": "Name",
+            "Value": "ApceraCESN"
+          }
+        ],
+        "MapPublicIpOnLaunch": "true",
+        "VpcId": {
+          "Ref": "ApceraCEVPC"
+        }
+      }
+    },
+    "ApceraCEIGW": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Product",
+            "Value": "ApceraCE"
+          },
+          {
+            "Key": "Name",
+            "Value": "ApceraCEIGW"
+          }
+        ]
+      }
+    },
+    "ApceraCEGWA": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "ApceraCEIGW"
+        },
+        "VpcId": {
+          "Ref": "ApceraCEVPC"
+        }
+      }
+    },
+    "ApceraCERT": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Product",
+            "Value": "apcera-setup"
+          },
+          {
+            "Key": "Name",
+            "Value": "ApceraCERT"
+          }
+        ],
+        "VpcId": {
+          "Ref": "ApceraCEVPC"
+        }
+      }
+    },
+    "ApceraCERTA": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "ApceraCERT"
+        },
+        "SubnetId": {
+          "Ref": "ApceraCESN"
+        }
+      }
+    },
+    "ApceraCESG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "ApceraCE Security Group",
+        "Tags": [
+          {
+            "Key": "Product",
+            "Value": "apcera-setup"
+          },
+          {
+            "Key": "Name",
+            "Value": "ApceraCESG"
+          }
+        ],
+        "VpcId": {
+          "Ref": "ApceraCEVPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22"
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80"
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443"
+          }
+        ]
+      }
+    },
+    "ApceraCESGI": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "ApceraCESG"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "0",
+        "ToPort": "0",
+        "SourceSecurityGroupId": {
+          "Ref": "ApceraCESG"
+        }
+      }
+    },
+    "ApceraCER": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "ApceraCEIGW"
+        },
+        "RouteTableId": {
+          "Ref": "ApceraCERT"
+        }
+      },
+      "DependsOn": [
+        "ApceraCEGWA"
+      ]
+    }
+  }
+}
