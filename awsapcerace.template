@@ -141,9 +141,9 @@
         "GroupId": {
           "Ref": "ApceraCESG"
         },
-        "IpProtocol": "tcp",
-        "FromPort": "0",
-        "ToPort": "0",
+        "IpProtocol": "-1",
+        "FromPort": "-1",
+        "ToPort": "-1",
         "SourceSecurityGroupId": {
           "Ref": "ApceraCESG"
         }
